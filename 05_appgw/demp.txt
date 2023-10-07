@@ -1,0 +1,128 @@
+resource appGateway 'Microsoft.Network/applicationGateways@2022-05-01' = {
+  name: appGatewayName
+  location: location
+  zones: appgwZonesArray
+  tags: {
+  }
+  properties: {
+    sku: {
+      name: 'WAF_v2'
+      tier: 'WAF_v2'
+    }
+    gatewayIPConfigurations: [
+      {
+        name: appgwIpConfigName
+        properties: {
+          subnet: {
+            id: appgwSubnetId
+          }
+        }
+      }
+    ]
+    frontendIPConfigurations: [
+      {
+        name: appgwFrontendName
+        properties: {
+          publicIPAddress: {
+            id: appGwPublicIpAddressId
+          }
+        }
+      }
+    ]
+    frontendPorts: [
+      {
+        name: 'port_443'
+        properties: {
+          port: 443
+        }
+      }
+    ]
+    autoscaleConfiguration: {
+      minCapacity: appgwAutoScaleMinCapacity
+      maxCapacity: appgwAutoScaleMaxCapacity
+    }
+    webApplicationFirewallConfiguration: {
+      enabled: true
+      firewallMode: 'Detection'
+      ruleSetType: 'OWASP'
+      ruleSetVersion: '3.0'
+    }
+    enableHttp2: false
+    backendAddressPools: [for item in appgwApplications: {
+      name: '${appgwBackendName}${item.name}'
+      properties: {   
+        backendAddresses: item.backendAddresses
+      }
+    }]
+    backendHttpSettingsCollection: [for item in appgwApplications: {
+      name: '${appgwHttpSettingsName}${item.name}'
+      properties: {
+        port: 443
+        protocol: 'Https'
+        cookieBasedAffinity: 'Disabled'
+        pickHostNameFromBackendAddress: true
+        requestTimeout: 20
+        probe: {
+          id: '${appgwId}/probes/${appgwHealthProbeName}${item.name}'
+        }
+      }
+    }]
+    httpListeners: [for item in appgwApplications: {
+      name: '${appgwListenerName}${item.name}'
+      properties: {
+        frontendIPConfiguration: {
+          id: '${appgwId}/frontendIPConfigurations/${appgwFrontendName}'
+        }
+        frontendPort: {
+          id: '${appgwId}/frontendPorts/port_443'
+        }
+        protocol: 'Https'
+        sslCertificate: {
+          id: '${appgwId}/sslCertificates/${appgwSslCertificateName}${item.name}'
+        }
+        hostName: item.hostName
+        requireServerNameIndication: true
+      }
+    }]
+    requestRoutingRules: [for item in appgwApplications: {
+      name: '${appgwRouteRulesName}${item.name}'
+      properties: {
+        priority: item.routingPriority
+        ruleType: 'Basic'
+        httpListener: {
+          id: '${appgwId}/httpListeners/${appgwListenerName}${item.name}'
+        }
+        backendAddressPool: {
+          id: '${appgwId}/backendAddressPools/${appgwBackendName}${item.name}'
+        }
+        backendHttpSettings: {
+          id: '${appgwId}/backendHttpSettingsCollection/${appgwHttpSettingsName}${item.name}'
+        }
+      }
+    }]
+    probes: [for item in appgwApplications: {
+      name: '${appgwHealthProbeName}${item.name}'
+      properties: {
+        protocol: 'Https'
+        path: item.probePath
+        interval: 30
+        timeout: 30
+        unhealthyThreshold: 3
+        pickHostNameFromBackendHttpSettings: true
+        minServers: 0
+        match: {
+          statusCodes: [
+            '200-399'
+          ]
+        }
+      }
+    }]
+    sslCertificates: [for item in appgwApplications: {
+      name: '${appgwSslCertificateName}${item.name}'
+      properties: {
+        data: item.certificate.data
+        password: item.certificate.password
+      }
+    }]
+  }
+}
