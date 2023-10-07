@@ -1,1 +1,1 @@
-![Project Diagram](https://github.com/faysalmehedi/terraform-azure-poc/blob/main/arch-diagram/terraform-poc.png)
+![Project Diagram](https://github.com/faysalmehedi/terraform-azure-poc/blob/main/arch-diagram/az-tf-assignment.png)
