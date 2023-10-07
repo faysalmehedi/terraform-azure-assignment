@@ -1,1 +1,1 @@
-![Project Diagram](https://github.com/faysalmehedi/vxlan-ovs-docker-lab/blob/main/vxlan_PacketWalk.png)
+![Project Diagram](https://github.com/faysalmehedi/terraform-azure-poc/blob/main/arch-diagram/terraform-poc.png)
