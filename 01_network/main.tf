@@ -6,12 +6,12 @@ terraform {
     }
   }
 
-  # backend "azurerm" {
-  #     resource_group_name  = "tfstate"
-  #     storage_account_name = "tfstateaksdemo"
-  #     container_name       = "01-basic-infra-state"
-  #     key                  = "terraform.tfstate"
-  #   }
+  backend "azurerm" {
+      resource_group_name  = "tfstate"
+      storage_account_name = "tfstateaksdemo"
+      container_name       = "01-basic-infra-state"
+      key                  = "terraform.tfstate"
+    }
 
 }
 
